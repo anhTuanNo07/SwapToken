@@ -156,14 +156,4 @@ describe('Swap token', function () {
       utils.parseEther('110000'),
     )
   })
-
-  it('send ether', async function () {
-    await deployer.sendTransaction({
-      to: acc1.address,
-      value: utils.parseEther('1000'),
-    })
-    console.log(await acc1.getBalance())
-    console.log(await acc2.getBalance())
-    console.log(await deployer.getBalance())
-  })
 })
