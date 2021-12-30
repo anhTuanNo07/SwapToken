@@ -6,7 +6,7 @@ import { ethers } from 'hardhat'
 import { ERC20Mock } from './../typechain-types/ERC20Mock'
 const { utils, BigNumber } = ethers
 
-describe('Swap token', function () {
+describe('Swap ERC20 token', function () {
   let tokenX: ERC20Mock
   let tokenY: ERC20Mock
   let tokenZ: ERC20Mock
@@ -15,9 +15,11 @@ describe('Swap token', function () {
   let acc1: any
   let acc2: any
   let acc3: any
+  const zeroAddress = '0x0000000000000000000000000000000000000000'
 
   beforeEach(async () => {
     ;[deployer, acc1, acc2, acc3] = await ethers.getSigners()
+
     tokenX = await (
       await new ERC20Mock__factory(deployer).deploy(
         'TokenX',
@@ -64,10 +66,12 @@ describe('Swap token', function () {
     await tokenZ.transfer(acc3.address, utils.parseEther('100000'))
     await tokenZ.transfer(swapToken.address, utils.parseEther('100000'))
 
+    // console.log(tx, 'tx')
+
     // Set Rate for TokenX and TokenY
-    await swapToken
-      .connect(deployer)
-      .setRate(tokenX.address, tokenY.address, [1, 2])
+    await swapToken.connect(deployer).setRate(tokenX.address, 1, 1)
+
+    await swapToken.connect(deployer).setRate(tokenY.address, 2, 1)
   })
 
   it('Swap user with user', async function () {
@@ -154,6 +158,31 @@ describe('Swap token', function () {
     )
     expect(await tokenX.connect(acc2).balanceOf(acc2.address)).to.equal(
       utils.parseEther('110000'),
+    )
+  })
+
+  it('swap NFT with native token with users', async function () {
+    const options = { value: utils.parseEther('1000') }
+    await swapToken.connect(acc2).approveSendEther(options)
+    await tokenX
+      .connect(acc1)
+      .approve(swapToken.address, utils.parseEther('1000'))
+    // Set rate token
+    await swapToken.connect(deployer).setRate(tokenX.address, 1, 0)
+    await swapToken.connect(deployer).setRate(zeroAddress, 1, 0)
+    await swapToken
+      .connect(acc1)
+      .swap(acc2.address, tokenX.address, zeroAddress, utils.parseEther('1000'))
+    console.log(
+      (await acc1.getBalance()).toString(),
+      'acc1 ether balance after',
+    )
+    console.log(
+      (await acc2.getBalance()).toString(),
+      'acc2 ether balance after',
+    )
+    expect((await swapToken.connect(deployer).balanceOf()).toString()).to.equal(
+      '0',
     )
   })
 })
