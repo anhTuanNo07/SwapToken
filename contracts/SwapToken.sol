@@ -32,9 +32,6 @@ contract SwapToken is Ownable {
 
     // The rate is normalized relatively with the native token
     function setRate(address _token, uint256 _rate, uint32 _decimal) external onlyOwner {
-        // check set rate
-        require(tokenToRate[_token].rate == 0, "Token already set rate");
-
         tokenToRate[_token].rate = _rate;
         tokenToRate[_token].decimal = _decimal;
     }
