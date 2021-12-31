@@ -20,9 +20,10 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export interface SwapTokenInterface extends utils.Interface {
   functions: {
-    "approveSendEther()": FunctionFragment;
+    "__Swap_init(address)": FunctionFragment;
     "balanceOf()": FunctionFragment;
-    "etherAllowance(address)": FunctionFragment;
+    "deposit()": FunctionFragment;
+    "etherDeposit(address)": FunctionFragment;
     "nativeToken()": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
@@ -33,13 +34,11 @@ export interface SwapTokenInterface extends utils.Interface {
     "withdraw(uint256)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "approveSendEther",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: "__Swap_init", values: [string]): string;
   encodeFunctionData(functionFragment: "balanceOf", values?: undefined): string;
+  encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "etherAllowance",
+    functionFragment: "etherDeposit",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -70,12 +69,13 @@ export interface SwapTokenInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "approveSendEther",
+    functionFragment: "__Swap_init",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "etherAllowance",
+    functionFragment: "etherDeposit",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -150,16 +150,18 @@ export interface SwapToken extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    __Swap_init(
+      _address: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     balanceOf(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    etherAllowance(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     nativeToken(overrides?: CallOverrides): Promise<[string]>;
 
@@ -200,13 +202,18 @@ export interface SwapToken extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
-  approveSendEther(
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  __Swap_init(
+    _address: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
-  etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+  deposit(
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   nativeToken(overrides?: CallOverrides): Promise<string>;
 
@@ -247,11 +254,13 @@ export interface SwapToken extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    approveSendEther(overrides?: CallOverrides): Promise<void>;
+    __Swap_init(_address: string, overrides?: CallOverrides): Promise<void>;
 
     balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
-    etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+    deposit(overrides?: CallOverrides): Promise<void>;
+
+    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     nativeToken(overrides?: CallOverrides): Promise<string>;
 
@@ -306,13 +315,18 @@ export interface SwapToken extends BaseContract {
   };
 
   estimateGas: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    __Swap_init(
+      _address: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
 
-    etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     nativeToken(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -351,13 +365,18 @@ export interface SwapToken extends BaseContract {
   };
 
   populateTransaction: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    __Swap_init(
+      _address: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     balanceOf(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    etherAllowance(
+    deposit(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    etherDeposit(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

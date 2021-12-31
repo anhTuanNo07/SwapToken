@@ -6,6 +6,8 @@ import '@nomiclabs/hardhat-waffle'
 import '@typechain/hardhat'
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
+// hardhat.config.ts
+import '@openzeppelin/hardhat-upgrades'
 
 dotenv.config()
 

@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract SwapToken is Ownable {
-    using SafeERC20 for IERC20;
+contract SwapToken is Initializable, OwnableUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     event Deposit(address _sender,uint256 _value,uint256 _balance);
 
-    address public nativeToken = address(0);
+    address public nativeToken;
 
     // mapping
     mapping(address => Rate) public tokenToRate;
-    mapping(address => uint) public etherAllowance;
+    mapping(address => uint) public etherDeposit;
 
     // modifier
     modifier haveSetRate(address _token1, address _token2) {
@@ -28,6 +29,12 @@ contract SwapToken is Ownable {
     struct Rate {
         uint256 rate;
         uint32 decimal;
+    }
+
+    // Initialize
+    function __Swap_init(address _address) public initializer {
+        __Ownable_init();
+        nativeToken = _address;
     }
 
     // The rate is normalized relatively with the native token
@@ -48,13 +55,13 @@ contract SwapToken is Ownable {
         return address(this).balance;
     }
 
-    function approveSendEther() external payable {
-        etherAllowance[msg.sender] = etherAllowance[msg.sender] + msg.value;
+    function deposit() external payable {
+        etherDeposit[msg.sender] = etherDeposit[msg.sender] + msg.value;
     }
 
     function withdraw(uint256 _amount) external payable {
-        require(_amount <= etherAllowance[msg.sender], "exceed allowance");
-        etherAllowance[msg.sender] =  etherAllowance[msg.sender] - _amount;
+        require(_amount <= etherDeposit[msg.sender], "exceed allowance");
+        etherDeposit[msg.sender] =  etherDeposit[msg.sender] - _amount;
         (bool sent, ) = msg.sender.call{value: _amount}("");
         require(sent, "failed to transfer token");
     }
@@ -62,8 +69,8 @@ contract SwapToken is Ownable {
     // internal function
 
     function _swap(address _owner1, address _owner2, address _token1, address _token2, uint _amount1, uint _amount2) internal {
-        IERC20 token1 = IERC20(_token1);
-        IERC20 token2 = IERC20(_token2);
+        IERC20Upgradeable token1 = IERC20Upgradeable(_token1);
+        IERC20Upgradeable token2 = IERC20Upgradeable(_token2);
         require(msg.sender == _owner1 || msg.sender == _owner2, "Not authorized");
 
         if (_token1 == nativeToken) {
@@ -81,8 +88,8 @@ contract SwapToken is Ownable {
         if (_token2 == nativeToken) {
             token1.safeTransferFrom(_owner1, _owner2, _amount1);
             if(_owner2 != address(this)) {
-                require(etherAllowance[_owner2] >= _amount2, "not enough allowance");
-                etherAllowance[_owner2] = etherAllowance[_owner2] - _amount2;
+                require(etherDeposit[_owner2] >= _amount2, "not enough allowance");
+                etherDeposit[_owner2] = etherDeposit[_owner2] - _amount2;
             }
 
             (bool sent, ) = _owner1.call{value: _amount2}("");
