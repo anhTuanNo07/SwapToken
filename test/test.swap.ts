@@ -2,7 +2,7 @@ import { SwapToken__factory } from './../typechain-types/factories/SwapToken__fa
 import { ERC20Mock__factory } from './../typechain-types/factories/ERC20Mock__factory'
 import { SwapToken } from './../typechain-types/SwapToken'
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, upgrades } from 'hardhat'
 import { ERC20Mock } from './../typechain-types/ERC20Mock'
 const { utils, BigNumber } = ethers
 
@@ -52,9 +52,13 @@ describe('Swap ERC20 token', function () {
       )
     ).deployed()
 
-    swapToken = await (
-      await new SwapToken__factory(deployer).deploy()
-    ).deployed()
+    swapToken = (await (
+      await upgrades.deployProxy(
+        new SwapToken__factory(deployer),
+        [zeroAddress],
+        { initializer: '__Swap_init' },
+      )
+    ).deployed()) as SwapToken
     // initial transfer tokenX
     await tokenX.transfer(acc1.address, utils.parseEther('100000'))
     await tokenX.transfer(acc2.address, utils.parseEther('100000'))
@@ -172,7 +176,7 @@ describe('Swap ERC20 token', function () {
 
   it('swap NFT with native token with users', async function () {
     const options = { value: utils.parseEther('1000') }
-    await swapToken.connect(acc2).approveSendEther(options)
+    await swapToken.connect(acc2).deposit(options)
     await tokenX
       .connect(acc1)
       .approve(swapToken.address, utils.parseEther('1000'))

@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract SwapToken is Ownable {
-    using SafeERC20 for IERC20;
+contract SwapToken is Initializable, OwnableUpgradeable {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     event Deposit(address _sender,uint256 _value,uint256 _balance);
     event Received(address, uint);
 
-    address public nativeToken = address(0);
+    address public nativeToken;
 
     // mapping
     mapping(address => Rate) public tokenToRate;
-    mapping(address => uint) public etherAllowance;
+    mapping(address => uint) public etherDeposit;
 
     // modifier
     modifier haveSetRate(address _token1, address _token2) {
@@ -29,6 +30,12 @@ contract SwapToken is Ownable {
     struct Rate {
         uint256 rate;
         uint32 decimal;
+    }
+
+    // Initialize
+    function __Swap_init(address _address) public initializer {
+        __Ownable_init();
+        nativeToken = _address;
     }
 
     // The rate is normalized relatively with the native token
