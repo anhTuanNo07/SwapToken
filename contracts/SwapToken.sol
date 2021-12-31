@@ -60,8 +60,8 @@ contract SwapToken is Initializable, OwnableUpgradeable {
     // internal function
 
     function _swap(address _token1, address _token2, uint _amount1, uint _amount2) internal {
-        IERC20 token1 = IERC20(_token1);
-        IERC20 token2 = IERC20(_token2);
+        IERC20Upgradeable token1 = IERC20Upgradeable(_token1);
+        IERC20Upgradeable token2 = IERC20Upgradeable(_token2);
 
         if (_token1 == nativeToken) {
             (bool sent, ) = address(this).call{value: _amount1}("");
