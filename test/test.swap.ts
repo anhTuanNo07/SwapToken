@@ -19,10 +19,7 @@ describe('Swap ERC20 token', function () {
   
   beforeEach(async () => {
     [deployer, acc1, acc2, acc3] = await ethers.getSigners()
-    console.log((await deployer.getBalance()).toString(), 'deployer ether balance after')
 
-    // console.log(await acc1.getBalance(acc1.address), 'acc1 ether balance after')
-    // console.log(await prov.getBalance(acc1.address), 'acc1 ether balance before')
     tokenX = await (
       await new ERC20Mock__factory(deployer).deploy(
         'TokenX',
@@ -81,30 +78,6 @@ describe('Swap ERC20 token', function () {
       .setRate(tokenY.address, 2, 1)
   })
 
-  it('Swap user with user', async function () {
-    await tokenX
-      .connect(acc1)
-      .approve(swapToken.address, utils.parseEther('10000'))
-    await tokenY
-      .connect(acc2)
-      .approve(swapToken.address, utils.parseEther('20000'))
-    await swapToken
-      .connect(acc1)
-      .swap(
-        acc2.address,
-        tokenX.address,
-        tokenY.address,
-        utils.parseEther('10000'),
-      )
-
-    expect(await tokenY.connect(acc1).balanceOf(acc1.address)).to.equal(
-      utils.parseEther('120000'),
-    )
-    expect(await tokenX.connect(acc2).balanceOf(acc2.address)).to.equal(
-      utils.parseEther('110000'),
-    )
-  })
-
   it('swap user with contract', async function () {
     await tokenX
       .connect(acc1)
@@ -112,7 +85,6 @@ describe('Swap ERC20 token', function () {
     await swapToken
       .connect(acc1)
       .swap(
-        swapToken.address,
         tokenX.address,
         tokenY.address,
         utils.parseEther('10000'),
@@ -121,73 +93,27 @@ describe('Swap ERC20 token', function () {
       utils.parseEther('120000'),
     )
   })
-
-  it('Swap user with user but token have not set the rate', async function () {
-    await tokenX
-      .connect(acc1)
-      .approve(swapToken.address, utils.parseEther('10000'))
-    await tokenZ
-      .connect(acc2)
-      .approve(swapToken.address, utils.parseEther('20000'))
-    try {
-      await swapToken
-        .connect(acc1)
-        .swap(
-          acc2.address,
-          tokenX.address,
-          tokenZ.address,
-          utils.parseEther('10000'),
-        )
-    } catch (error) {
-      expect(error.message).to.equal(
-        `VM Exception while processing transaction: reverted with reason string 'have not set rate'`,
-      )
-    }
-  })
-
-  it('swap token pair with reverse sequence to the rate set', async function () {
-    await tokenX
-      .connect(acc1)
-      .approve(swapToken.address, utils.parseEther('10000'))
-    await tokenY
-      .connect(acc2)
-      .approve(swapToken.address, utils.parseEther('20000'))
-    await swapToken
-      .connect(acc2)
-      .swap(
-        acc1.address,
-        tokenY.address,
-        tokenX.address,
-        utils.parseEther('20000'),
-      )
-    expect(await tokenY.connect(acc1).balanceOf(acc1.address)).to.equal(
-      utils.parseEther('120000'),
-    )
-    expect(await tokenX.connect(acc2).balanceOf(acc2.address)).to.equal(
-      utils.parseEther('110000'),
-      )
-    })
     
     it('swap NFT with native token', async function () {
       const options = {value: utils.parseEther("2500")}
-      await swapToken.connect(acc1).approveSendEther(options)
       await tokenX
       .connect(acc1)
       .approve(swapToken.address, utils.parseEther('10000'))
-      await swapToken.connect(acc2).approveSendEther(options)
       await swapToken
         .connect(deployer)
         .setRate(zeroAddress, 1, 0)
+      await acc2.sendTransaction({
+        to: swapToken.address,
+        value: utils.parseEther("2500")
+      })
       await swapToken
         .connect(acc1)
         .swap(
-          acc2.address,
           tokenX.address,
           zeroAddress,
           utils.parseEther('250'),
         )
 
-    console.log(await swapToken.connect(deployer).balanceOf(), 'swapToken ether balance after')
     console.log(await acc1.getBalance(), 'acc1 ether balance after')
     console.log(await acc2.getBalance(), 'acc2 ether balance after')
 

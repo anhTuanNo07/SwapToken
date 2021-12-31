@@ -20,24 +20,17 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export interface SwapTokenInterface extends utils.Interface {
   functions: {
-    "approveSendEther()": FunctionFragment;
-    "balanceOf()": FunctionFragment;
     "etherAllowance(address)": FunctionFragment;
     "nativeToken()": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setRate(address,uint256,uint32)": FunctionFragment;
-    "swap(address,address,address,uint256)": FunctionFragment;
+    "swap(address,address,uint256)": FunctionFragment;
     "tokenToRate(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "withdraw(uint256)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "approveSendEther",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "balanceOf", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "etherAllowance",
     values: [string]
@@ -57,7 +50,7 @@ export interface SwapTokenInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "swap",
-    values: [string, string, string, BigNumberish]
+    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "tokenToRate", values: [string]): string;
   encodeFunctionData(
@@ -69,11 +62,6 @@ export interface SwapTokenInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "approveSendEther",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "etherAllowance",
     data: BytesLike
@@ -102,10 +90,12 @@ export interface SwapTokenInterface extends utils.Interface {
   events: {
     "Deposit(address,uint256,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
+    "Received(address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Received"): EventFragment;
 }
 
 export type DepositEvent = TypedEvent<
@@ -122,6 +112,13 @@ export type OwnershipTransferredEvent = TypedEvent<
 
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
+
+export type ReceivedEvent = TypedEvent<
+  [string, BigNumber],
+  { arg0: string; arg1: BigNumber }
+>;
+
+export type ReceivedEventFilter = TypedEventFilter<ReceivedEvent>;
 
 export interface SwapToken extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -150,12 +147,6 @@ export interface SwapToken extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    balanceOf(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     etherAllowance(
       arg0: string,
       overrides?: CallOverrides
@@ -177,7 +168,6 @@ export interface SwapToken extends BaseContract {
     ): Promise<ContractTransaction>;
 
     swap(
-      _transferAddress: string,
       _token1: string,
       _token2: string,
       _amount1: BigNumberish,
@@ -200,12 +190,6 @@ export interface SwapToken extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
-  approveSendEther(
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
-
   etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   nativeToken(overrides?: CallOverrides): Promise<string>;
@@ -224,7 +208,6 @@ export interface SwapToken extends BaseContract {
   ): Promise<ContractTransaction>;
 
   swap(
-    _transferAddress: string,
     _token1: string,
     _token2: string,
     _amount1: BigNumberish,
@@ -247,10 +230,6 @@ export interface SwapToken extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    approveSendEther(overrides?: CallOverrides): Promise<void>;
-
-    balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
-
     etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     nativeToken(overrides?: CallOverrides): Promise<string>;
@@ -267,7 +246,6 @@ export interface SwapToken extends BaseContract {
     ): Promise<void>;
 
     swap(
-      _transferAddress: string,
       _token1: string,
       _token2: string,
       _amount1: BigNumberish,
@@ -303,15 +281,15 @@ export interface SwapToken extends BaseContract {
       previousOwner?: string | null,
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
+
+    "Received(address,uint256)"(
+      undefined?: null,
+      undefined?: null
+    ): ReceivedEventFilter;
+    Received(undefined?: null, undefined?: null): ReceivedEventFilter;
   };
 
   estimateGas: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    balanceOf(overrides?: CallOverrides): Promise<BigNumber>;
-
     etherAllowance(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     nativeToken(overrides?: CallOverrides): Promise<BigNumber>;
@@ -330,7 +308,6 @@ export interface SwapToken extends BaseContract {
     ): Promise<BigNumber>;
 
     swap(
-      _transferAddress: string,
       _token1: string,
       _token2: string,
       _amount1: BigNumberish,
@@ -351,12 +328,6 @@ export interface SwapToken extends BaseContract {
   };
 
   populateTransaction: {
-    approveSendEther(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    balanceOf(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     etherAllowance(
       arg0: string,
       overrides?: CallOverrides
@@ -378,7 +349,6 @@ export interface SwapToken extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     swap(
-      _transferAddress: string,
       _token1: string,
       _token2: string,
       _amount1: BigNumberish,
