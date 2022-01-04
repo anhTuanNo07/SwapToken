@@ -4,6 +4,7 @@ import { SwapToken } from './../typechain-types/SwapToken'
 import { expect } from 'chai'
 import { ethers, upgrades } from 'hardhat'
 import { ERC20Mock } from './../typechain-types/ERC20Mock'
+import { expectRevert } from '@openzeppelin/test-helpers'
 const { utils, BigNumber } = ethers
 
 describe('Swap ERC20 token', function () {
@@ -94,29 +95,27 @@ describe('Swap ERC20 token', function () {
     )
   })
     
-    it('swap NFT with native token', async function () {
-      const options = {value: utils.parseEther("2500")}
-      await tokenX
+  it('swap NFT with native token', async function () {
+    await tokenX
+    .connect(acc1)
+    .approve(swapToken.address, utils.parseEther('10000'))
+    await swapToken
+      .connect(deployer)
+      .setRate(zeroAddress, 1, 0)
+    await acc2.sendTransaction({
+      to: swapToken.address,
+      value: utils.parseEther("2500")
+    })
+    await swapToken
       .connect(acc1)
-      .approve(swapToken.address, utils.parseEther('10000'))
-      await swapToken
-        .connect(deployer)
-        .setRate(zeroAddress, 1, 0)
-      await acc2.sendTransaction({
-        to: swapToken.address,
-        value: utils.parseEther("2500")
-      })
-      await swapToken
-        .connect(acc1)
-        .swap(
-          tokenX.address,
-          zeroAddress,
-          utils.parseEther('250'),
-        )
-
-    console.log((await acc1.getBalance()).toString(), 'acc1 ether balance after')
-    console.log((await acc2.getBalance()).toString(), 'acc2 ether balance after')
-
+      .swap(
+        tokenX.address,
+        zeroAddress,
+        utils.parseEther('250'),
+      )
+    // the transfer cost make the balance is lower few percent
+    expect((await acc1.getBalance()).toString()).to.equal('12499999743411759634242')
+    expect((await acc2.getBalance()).toString()).to.equal('7499999971638658872881')
 
   })
 
@@ -126,59 +125,54 @@ describe('Swap ERC20 token', function () {
     await tokenX
       .connect(acc1)
       .approve(swapToken.address, utils.parseEther('10000'))
-    try {
-      await swapToken
+    await expectRevert(
+      swapToken
       .connect(acc1)
       .swap(
         tokenX.address,
         tokenY.address,
         utils.parseEther('10000'),
-      )
-    } catch(error) {
-      expect(error.message).to.equal(`Transaction reverted: function selector was not recognized and there's no fallback function`);
-    }
+      ),
+      `Transaction reverted: function selector was not recognized and there's no fallback function`
+    )
   })
   
   it('swap with the same token', async function () {
     await tokenX
     .connect(acc1)
     .approve(swapToken.address, utils.parseEther('1000'))
-    try {
-      await swapToken
+    await expectRevert(
+      swapToken
       .connect(acc1)
       .swap(
         tokenX.address,
         tokenX.address,
         utils.parseEther('10000'),
-        )
-      } catch(error) {
-      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'Can not transfer the same token'`);
-    }
+      ),
+      `VM Exception while processing transaction: reverted with reason string 'Can not transfer the same token'`
+    )
   })
 
   it('withdraw with not the owner of contract', async function() {
     await tokenX.connect(acc1).transfer(swapToken.address, utils.parseEther('2000'))
-    try {
-      await swapToken.connect(acc1).withdraw(tokenX.address, utils.parseEther('1000'), acc1.address)
-    } catch(error) {
-      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'`)
-    }
+    await expectRevert(
+      swapToken.connect(acc1).withdraw(tokenX.address, utils.parseEther('1000'), acc1.address),
+      'Ownable: caller is not the owner'
+    )
   })
 
   it('withdraw exceed the token of contract', async function() {
-    try {
-      await swapToken.connect(deployer).withdraw(tokenX.address, utils.parseEther('200000'), acc1.address)
-    } catch(error) {
-      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds balance'`)
-    }
+    await expectRevert(
+      swapToken.connect(deployer).withdraw(tokenX.address, utils.parseEther('200000'), acc1.address),
+      'ERC20: transfer amount exceeds balance'
+    )
   })
 
   it('withdraw exceed the native token of contract', async function() {
-    try {
-      await swapToken.connect(deployer).withdraw(zeroAddress, utils.parseEther('200000'), acc1.address)
-    } catch(error) {
-      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'failed to transfer token'`)
-    }
+    await expectRevert(
+      swapToken.connect(deployer).withdraw(zeroAddress, utils.parseEther('200000'), acc1.address),
+        `transfer outcome token failed`,
+      )
   })
 
   it('swap with odd value', async function() {

@@ -5,8 +5,10 @@
     "strict": false,
     "esModuleInterop": true,
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "allowJs": true,
+    "noImplicitAny": true
   },
-  "include": ["./scripts", "./test", "./typechain"],
-  "files": ["./hardhat.config.ts"]
+  "include": ["./scripts", "./test", "./typechain", "./node_modules/@openzeppelin/test-helpers"],
+  "files": ["./hardhat.config.ts", ]
 }

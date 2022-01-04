@@ -47,13 +47,7 @@ contract SwapToken is Initializable, OwnableUpgradeable {
     }
 
     function withdraw(address _token, uint256 _amount, address _receiver) external payable onlyOwner {
-        if(_token == address(0)) {
-            (bool sent, ) = _receiver.call{value: _amount}("");
-            require(sent, "failed to transfer token");
-            return;
-        }
-        IERC20Upgradeable token = IERC20Upgradeable(_token);
-        token.transfer(_receiver, _amount);
+        _handleOutcome(_token, _receiver, _amount);
     }
 
     receive() external payable {}
