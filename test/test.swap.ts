@@ -137,6 +137,61 @@ describe('Swap ERC20 token', function () {
     } catch(error) {
       expect(error.message).to.equal(`Transaction reverted: function selector was not recognized and there's no fallback function`);
     }
+  })
+  
+  it('swap with the same token', async function () {
+    await tokenX
+    .connect(acc1)
+    .approve(swapToken.address, utils.parseEther('1000'))
+    try {
+      await swapToken
+      .connect(acc1)
+      .swap(
+        tokenX.address,
+        tokenX.address,
+        utils.parseEther('10000'),
+        )
+      } catch(error) {
+      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'Can not transfer the same token'`);
+    }
+  })
 
+  it('withdraw with not the owner of contract', async function() {
+    await tokenX.connect(acc1).transfer(swapToken.address, utils.parseEther('2000'))
+    try {
+      await swapToken.connect(acc1).withdraw(tokenX.address, utils.parseEther('1000'), acc1.address)
+    } catch(error) {
+      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'`)
+    }
+  })
+
+  it('withdraw exceed the token of contract', async function() {
+    try {
+      await swapToken.connect(deployer).withdraw(tokenX.address, utils.parseEther('200000'), acc1.address)
+    } catch(error) {
+      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds balance'`)
+    }
+  })
+
+  it('withdraw exceed the native token of contract', async function() {
+    try {
+      await swapToken.connect(deployer).withdraw(zeroAddress, utils.parseEther('200000'), acc1.address)
+    } catch(error) {
+      expect(error.message).to.equal(`VM Exception while processing transaction: reverted with reason string 'failed to transfer token'`)
+    }
+  })
+
+  it('swap with odd value', async function() {
+      // Set Rate for TokenX and TokenY
+    await swapToken.connect(deployer).setRate(tokenX.address, 233333, 3)
+
+    await swapToken.connect(deployer).setRate(tokenY.address, 33333, 11)
+
+    await tokenX
+    .connect(acc1)
+    .approve(swapToken.address, utils.parseEther('1000'))
+
+    await swapToken.connect(acc1).swap(tokenX.address, tokenY.address, utils.parseEther('0.00001'))
+    expect((await tokenY.balanceOf(acc1.address)).toString()).to.equal('100000000000000000014285')
   })
 })

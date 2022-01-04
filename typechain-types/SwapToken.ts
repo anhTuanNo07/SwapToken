@@ -21,23 +21,18 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface SwapTokenInterface extends utils.Interface {
   functions: {
     "__Swap_init()": FunctionFragment;
-    "etherDeposit(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setRate(address,uint256,uint32)": FunctionFragment;
     "swap(address,address,uint256)": FunctionFragment;
     "tokenToRate(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdraw(uint256)": FunctionFragment;
+    "withdraw(address,uint256,address)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "__Swap_init",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "etherDeposit",
-    values: [string]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -59,15 +54,11 @@ export interface SwapTokenInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish]
+    values: [string, BigNumberish, string]
   ): string;
 
   decodeFunctionResult(
     functionFragment: "__Swap_init",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "etherDeposit",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -88,22 +79,11 @@ export interface SwapTokenInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
-    "Deposit(address,uint256,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "Received(address,uint256)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Received"): EventFragment;
 }
-
-export type DepositEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  { _sender: string; _value: BigNumber; _balance: BigNumber }
->;
-
-export type DepositEventFilter = TypedEventFilter<DepositEvent>;
 
 export type OwnershipTransferredEvent = TypedEvent<
   [string, string],
@@ -112,13 +92,6 @@ export type OwnershipTransferredEvent = TypedEvent<
 
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
-
-export type ReceivedEvent = TypedEvent<
-  [string, BigNumber],
-  { arg0: string; arg1: BigNumber }
->;
-
-export type ReceivedEventFilter = TypedEventFilter<ReceivedEvent>;
 
 export interface SwapToken extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -151,8 +124,6 @@ export interface SwapToken extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
@@ -167,9 +138,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<ContractTransaction>;
 
     swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
+      _tokenIn: string,
+      _tokenOut: string,
+      _amountIn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -184,7 +155,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<ContractTransaction>;
 
     withdraw(
+      _token: string,
       _amount: BigNumberish,
+      _receiver: string,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -192,8 +165,6 @@ export interface SwapToken extends BaseContract {
   __Swap_init(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
-
-  etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -209,9 +180,9 @@ export interface SwapToken extends BaseContract {
   ): Promise<ContractTransaction>;
 
   swap(
-    _token1: string,
-    _token2: string,
-    _amount1: BigNumberish,
+    _tokenIn: string,
+    _tokenOut: string,
+    _amountIn: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -226,14 +197,14 @@ export interface SwapToken extends BaseContract {
   ): Promise<ContractTransaction>;
 
   withdraw(
+    _token: string,
     _amount: BigNumberish,
+    _receiver: string,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
     __Swap_init(overrides?: CallOverrides): Promise<void>;
-
-    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -247,9 +218,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<void>;
 
     swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
+      _tokenIn: string,
+      _tokenOut: string,
+      _amountIn: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -263,17 +234,15 @@ export interface SwapToken extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    withdraw(_amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
+    withdraw(
+      _token: string,
+      _amount: BigNumberish,
+      _receiver: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
-    "Deposit(address,uint256,uint256)"(
-      _sender?: null,
-      _value?: null,
-      _balance?: null
-    ): DepositEventFilter;
-    Deposit(_sender?: null, _value?: null, _balance?: null): DepositEventFilter;
-
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
       newOwner?: string | null
@@ -282,20 +251,12 @@ export interface SwapToken extends BaseContract {
       previousOwner?: string | null,
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
-
-    "Received(address,uint256)"(
-      undefined?: null,
-      undefined?: null
-    ): ReceivedEventFilter;
-    Received(undefined?: null, undefined?: null): ReceivedEventFilter;
   };
 
   estimateGas: {
     __Swap_init(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    etherDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -311,9 +272,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<BigNumber>;
 
     swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
+      _tokenIn: string,
+      _tokenOut: string,
+      _amountIn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -325,7 +286,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _token: string,
       _amount: BigNumberish,
+      _receiver: string,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -333,11 +296,6 @@ export interface SwapToken extends BaseContract {
   populateTransaction: {
     __Swap_init(
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    etherDeposit(
-      arg0: string,
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -354,9 +312,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
+      _tokenIn: string,
+      _tokenOut: string,
+      _amountIn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -371,7 +329,9 @@ export interface SwapToken extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     withdraw(
+      _token: string,
       _amount: BigNumberish,
+      _receiver: string,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
