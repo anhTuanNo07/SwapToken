@@ -48,7 +48,7 @@ describe('Swap ERC20 token', function () {
     swapToken = (await (
       await upgrades.deployProxy(
         new SwapToken__factory(deployer),
-        [zeroAddress],
+        [],
         { initializer: '__Swap_init' },
       )
     ).deployed()) as SwapToken
@@ -114,9 +114,29 @@ describe('Swap ERC20 token', function () {
           utils.parseEther('250'),
         )
 
-    console.log(await acc1.getBalance(), 'acc1 ether balance after')
-    console.log(await acc2.getBalance(), 'acc2 ether balance after')
+    console.log((await acc1.getBalance()).toString(), 'acc1 ether balance after')
+    console.log((await acc2.getBalance()).toString(), 'acc2 ether balance after')
 
+
+  })
+
+  it('upgrade delete swap function and try to swap', async function() {
+    const SwapTokenFactory = await ethers.getContractFactory("SwapTokenV2");
+    const swapTokenUpgrade = await upgrades.upgradeProxy(swapToken.address, SwapTokenFactory);
+    await tokenX
+      .connect(acc1)
+      .approve(swapToken.address, utils.parseEther('10000'))
+    try {
+      await swapToken
+      .connect(acc1)
+      .swap(
+        tokenX.address,
+        tokenY.address,
+        utils.parseEther('10000'),
+      )
+    } catch(error) {
+      expect(error.message).to.equal(`Transaction reverted: function selector was not recognized and there's no fallback function`);
+    }
 
   })
 })

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract SwapToken is Initializable, OwnableUpgradeable {
+contract SwapTokenV2 is Initializable, OwnableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     event Deposit(address _sender,uint256 _value,uint256 _balance);
     event Received(address, uint);
@@ -14,6 +14,7 @@ contract SwapToken is Initializable, OwnableUpgradeable {
     // mapping
     mapping(address => Rate) public tokenToRate;
     mapping(address => uint) public etherDeposit;
+    mapping(address => address) public upgradeAddress;
 
     // modifier
     modifier haveSetRate(address _token1, address _token2) {
@@ -41,13 +42,13 @@ contract SwapToken is Initializable, OwnableUpgradeable {
         tokenToRate[_token].decimal = _decimal;
     }
 
-    function swap(address _token1, address _token2, uint _amount1) external haveSetRate(_token1, _token2) {
-        // multiple first to reduce error 
-        uint256 _amount2 = _amount1 * tokenToRate[_token2].rate * 10 ** tokenToRate[_token1].decimal 
-        / (tokenToRate[_token1].rate * 10 ** tokenToRate[_token2].decimal);
+    // function swap(address _token1, address _token2, uint _amount1) external haveSetRate(_token1, _token2) {
+    //     // multiple first to reduce error 
+    //     uint256 _amount2 = _amount1 * tokenToRate[_token2].rate * 10 ** tokenToRate[_token1].decimal 
+    //     / (tokenToRate[_token1].rate * 10 ** tokenToRate[_token2].decimal);
 
-        _swap(_token1, _token2, _amount1, _amount2);
-    }
+    //     _swap(_token1, _token2, _amount1, _amount2);
+    // }
 
     function withdraw(uint256 _amount) external payable onlyOwner {
         (bool sent, ) = msg.sender.call{value: _amount}("");

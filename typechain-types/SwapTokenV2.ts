@@ -18,16 +18,16 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export interface SwapTokenInterface extends utils.Interface {
+export interface SwapTokenV2Interface extends utils.Interface {
   functions: {
     "__Swap_init()": FunctionFragment;
     "etherDeposit(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setRate(address,uint256,uint32)": FunctionFragment;
-    "swap(address,address,uint256)": FunctionFragment;
     "tokenToRate(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "upgradeAddress(address)": FunctionFragment;
     "withdraw(uint256)": FunctionFragment;
   };
 
@@ -48,13 +48,13 @@ export interface SwapTokenInterface extends utils.Interface {
     functionFragment: "setRate",
     values: [string, BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "swap",
-    values: [string, string, BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "tokenToRate", values: [string]): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "upgradeAddress",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -76,13 +76,16 @@ export interface SwapTokenInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setRate", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "tokenToRate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
@@ -120,12 +123,12 @@ export type ReceivedEvent = TypedEvent<
 
 export type ReceivedEventFilter = TypedEventFilter<ReceivedEvent>;
 
-export interface SwapToken extends BaseContract {
+export interface SwapTokenV2 extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: SwapTokenInterface;
+  interface: SwapTokenV2Interface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -166,13 +169,6 @@ export interface SwapToken extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     tokenToRate(
       arg0: string,
       overrides?: CallOverrides
@@ -182,6 +178,8 @@ export interface SwapToken extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    upgradeAddress(arg0: string, overrides?: CallOverrides): Promise<[string]>;
 
     withdraw(
       _amount: BigNumberish,
@@ -208,13 +206,6 @@ export interface SwapToken extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  swap(
-    _token1: string,
-    _token2: string,
-    _amount1: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   tokenToRate(
     arg0: string,
     overrides?: CallOverrides
@@ -224,6 +215,8 @@ export interface SwapToken extends BaseContract {
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  upgradeAddress(arg0: string, overrides?: CallOverrides): Promise<string>;
 
   withdraw(
     _amount: BigNumberish,
@@ -246,13 +239,6 @@ export interface SwapToken extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     tokenToRate(
       arg0: string,
       overrides?: CallOverrides
@@ -262,6 +248,8 @@ export interface SwapToken extends BaseContract {
       newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    upgradeAddress(arg0: string, overrides?: CallOverrides): Promise<string>;
 
     withdraw(_amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
   };
@@ -310,19 +298,14 @@ export interface SwapToken extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     tokenToRate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    upgradeAddress(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
       _amount: BigNumberish,
@@ -353,13 +336,6 @@ export interface SwapToken extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    swap(
-      _token1: string,
-      _token2: string,
-      _amount1: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     tokenToRate(
       arg0: string,
       overrides?: CallOverrides
@@ -368,6 +344,11 @@ export interface SwapToken extends BaseContract {
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeAddress(
+      arg0: string,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     withdraw(
