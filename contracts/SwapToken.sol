@@ -8,12 +8,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract SwapToken is Initializable, OwnableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-    event Deposit(address _sender,uint256 _value,uint256 _balance);
-    event Received(address, uint);
 
     // mapping
     mapping(address => Rate) public tokenToRate;
-    mapping(address => uint) public etherDeposit;
 
     // modifier
     modifier haveSetRate(address _token1, address _token2) {
@@ -41,44 +38,50 @@ contract SwapToken is Initializable, OwnableUpgradeable {
         tokenToRate[_token].decimal = _decimal;
     }
 
-    function swap(address _token1, address _token2, uint _amount1) external haveSetRate(_token1, _token2) {
+    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) external haveSetRate(_tokenIn, _tokenOut) {
         // multiple first to reduce error 
-        uint256 _amount2 = _amount1 * tokenToRate[_token2].rate * 10 ** tokenToRate[_token1].decimal 
-        / (tokenToRate[_token1].rate * 10 ** tokenToRate[_token2].decimal);
+        uint256 _amountOut = _amountIn * tokenToRate[_tokenOut].rate * 10 ** tokenToRate[_tokenIn].decimal 
+        / (tokenToRate[_tokenIn].rate * 10 ** tokenToRate[_tokenOut].decimal);
 
-        _swap(_token1, _token2, _amount1, _amount2);
+        _swap(_tokenIn, _tokenOut, _amountIn, _amountOut);
     }
 
-    function withdraw(uint256 _amount) external payable onlyOwner {
-        (bool sent, ) = msg.sender.call{value: _amount}("");
-        require(sent, "failed to transfer token");
+    function withdraw(address _token, uint256 _amount, address _receiver) external payable onlyOwner {
+        if(_token == address(0)) {
+            (bool sent, ) = _receiver.call{value: _amount}("");
+            require(sent, "failed to transfer token");
+            return;
+        }
+        IERC20Upgradeable token = IERC20Upgradeable(_token);
+        token.transfer(_receiver, _amount);
     }
+
+    receive() external payable {}
 
     // internal function
-
-    function _swap(address _token1, address _token2, uint _amount1, uint _amount2) internal {
-        IERC20Upgradeable token1 = IERC20Upgradeable(_token1);
-        IERC20Upgradeable token2 = IERC20Upgradeable(_token2);
-
-        if (_token1 == address(0)) {
-            (bool sent, ) = address(this).call{value: _amount1}("");
-            require(sent, "failed to transfer token");
-            token2.transfer(msg.sender, _amount2);
+    function _swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOut) internal {
+        require(_tokenIn != _tokenOut, "Can not transfer the same token");
+        _handleIncome(_tokenIn, msg.sender, _amountIn);
+        _handleOutcome(_tokenOut, msg.sender, _amountOut);
+    }
+    
+    function _handleIncome(address _tokenIn, address _sender, uint256 _amountIn) internal {
+        IERC20Upgradeable tokenIn = IERC20Upgradeable(_tokenIn);
+        if(_tokenIn == address(0)) {
+            (bool sent, ) = address(this).call{value: _amountIn}("");
+            require(sent, "transfer income token failed");
             return;
         }
-
-        if (_token2 == address(0)) {
-            token1.safeTransferFrom(msg.sender, address(this), _amount1);
-            (bool sent, ) = msg.sender.call{value: _amount2}("");
-            require(sent, "failed to transfer token");
-            return;
-        }
-
-        token1.safeTransferFrom(msg.sender, address(this), _amount1);
-        token2.transfer(msg.sender, _amount2);
+        tokenIn.safeTransferFrom(_sender, address(this), _amountIn);
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
+    function _handleOutcome(address _tokenOut, address _receiver, uint256 _amountOut) internal {
+        IERC20Upgradeable tokenOut = IERC20Upgradeable(_tokenOut);
+        if(_tokenOut == address(0)) {
+            (bool sent, ) = _receiver.call{value: _amountOut}("");
+            require(sent, "transfer outcome token failed");
+            return;
+        }
+        tokenOut.transfer(_receiver, _amountOut);
     }
 }
