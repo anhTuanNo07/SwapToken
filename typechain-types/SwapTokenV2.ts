@@ -24,7 +24,6 @@ export interface SwapTokenV2Interface extends utils.Interface {
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setRate(address,uint256,uint32)": FunctionFragment;
-    "swap(address,address,uint256)": FunctionFragment;
     "tokenToRate(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "withdraw(address,uint256,address)": FunctionFragment;
@@ -42,10 +41,6 @@ export interface SwapTokenV2Interface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setRate",
     values: [string, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "swap",
-    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "tokenToRate", values: [string]): string;
   encodeFunctionData(
@@ -67,7 +62,6 @@ export interface SwapTokenV2Interface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setRate", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "tokenToRate",
     data: BytesLike
@@ -137,13 +131,6 @@ export interface SwapTokenV2 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    swap(
-      _tokenIn: string,
-      _tokenOut: string,
-      _amountIn: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     tokenToRate(
       arg0: string,
       overrides?: CallOverrides
@@ -179,13 +166,6 @@ export interface SwapTokenV2 extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  swap(
-    _tokenIn: string,
-    _tokenOut: string,
-    _amountIn: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   tokenToRate(
     arg0: string,
     overrides?: CallOverrides
@@ -214,13 +194,6 @@ export interface SwapTokenV2 extends BaseContract {
       _token: string,
       _rate: BigNumberish,
       _decimal: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    swap(
-      _tokenIn: string,
-      _tokenOut: string,
-      _amountIn: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -271,13 +244,6 @@ export interface SwapTokenV2 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    swap(
-      _tokenIn: string,
-      _tokenOut: string,
-      _amountIn: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     tokenToRate(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     transferOwnership(
@@ -308,13 +274,6 @@ export interface SwapTokenV2 extends BaseContract {
       _token: string,
       _rate: BigNumberish,
       _decimal: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    swap(
-      _tokenIn: string,
-      _tokenOut: string,
-      _amountIn: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

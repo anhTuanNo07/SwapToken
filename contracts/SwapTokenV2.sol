@@ -38,13 +38,13 @@ contract SwapTokenV2 is Initializable, OwnableUpgradeable {
         tokenToRate[_token].decimal = _decimal;
     }
 
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) external haveSetRate(_tokenIn, _tokenOut) {
-        // multiple first to reduce error 
-        uint256 _amountOut = _amountIn * tokenToRate[_tokenOut].rate * 10 ** tokenToRate[_tokenIn].decimal 
-        / (tokenToRate[_tokenIn].rate * 10 ** tokenToRate[_tokenOut].decimal);
+    // function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) external haveSetRate(_tokenIn, _tokenOut) {
+    //     // multiple first to reduce error 
+    //     uint256 _amountOut = _amountIn * tokenToRate[_tokenOut].rate * 10 ** tokenToRate[_tokenIn].decimal 
+    //     / (tokenToRate[_tokenIn].rate * 10 ** tokenToRate[_tokenOut].decimal);
 
-        _swap(_tokenIn, _tokenOut, _amountIn, _amountOut);
-    }
+    //     _swap(_tokenIn, _tokenOut, _amountIn, _amountOut);
+    // }
 
     function withdraw(address _token, uint256 _amount, address _receiver) external payable onlyOwner {
         if(_token == address(0)) {
