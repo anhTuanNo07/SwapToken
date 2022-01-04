@@ -41,6 +41,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SwapToken__factory>;
     getContractFactory(
+      name: "SwapTokenV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SwapTokenV2__factory>;
+    getContractFactory(
       name: "ERC20Mock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20Mock__factory>;
@@ -80,6 +84,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SwapToken>;
+    getContractAt(
+      name: "SwapTokenV2",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SwapTokenV2>;
     getContractAt(
       name: "ERC20Mock",
       address: string,
